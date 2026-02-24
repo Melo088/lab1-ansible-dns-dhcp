@@ -387,11 +387,13 @@ Este laboratorio fue adaptado exitosamente para sortear las limitaciones de red 
 
 ### 1. Entorno de Python (PEP 668)
 En Ubuntu 24.04 (WSL), no es posible instalar Ansible globalmente con `pip`. Se debe aislar el proyecto:
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install ansible ansible-lint
-ansible-galaxy collection install ansible.posix community.general```
+ansible-galaxy collection install ansible.posix community.general
+```
 
 ### 2. Localhost y el Inventario SSH
 
