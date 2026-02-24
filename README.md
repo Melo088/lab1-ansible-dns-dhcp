@@ -100,7 +100,7 @@ ip -br link show
 # eth1   UP    192.168.100.10/24 ← lab-red
 ```
 
-Si el nombre fuera diferente (ej. `enp0s8`), actualiza `dhcp_interface` en `group_vars/all.yml`.
+Si el nombre fuera diferente (ej. `enp0s8`), actualiza `dhcpd_interface` en `group_vars/all.yml`.
 
 ---
 
@@ -111,7 +111,7 @@ Rocky Linux 9 ejecuta SELinux en modo **enforcing** por defecto. El playbook:
 1. Instala `python3-libsemanage` (requerido por el módulo `ansible.posix.seboolean`)
 2. Activa el booleano `named_write_master_zones` (permite a named escribir archivos de zona)
 
-Los puertos estándar 53 (DNS) y 67 (DHCP) ya tienen etiquetas SELinux correctas en la política de stock (`dns_port_t`, `dhcp_port_t`). No se requieren modificaciones adicionales.
+Los puertos estándar 53 (DNS) y 67 (DHCP) ya tienen etiquetas SELinux correctas en la política de stock (`dns_port_t`, `dhcpd_port_t`). No se requieren modificaciones adicionales.
 
 ---
 
@@ -132,15 +132,15 @@ dns_forwarders:  ["8.8.8.8", "8.8.4.4"]
 dns_a_records:   [...]          # Añadir nuevos hosts aquí
 
 # DHCP
-dhcp_subnets:      [...]
-dhcp_reservations: []           # Reservas por MAC
-dhcp_interface:    "eth1"
+dhcpd_subnets:      [...]
+dhcpd_reservations: []           # Reservas por MAC
+dhcpd_interface:    "eth1"
 ```
 
 ### Añadir una reserva por MAC
 
 ```yaml
-dhcp_reservations:
+dhcpd_reservations:
   - hostname: "impresora"
     mac:      "08:00:27:aa:bb:cc"
     ip:       "192.168.100.60"
@@ -250,7 +250,7 @@ exit
 
 Si el nombre es diferente a `eth1`, edita `group_vars/all.yml`:
 ```yaml
-dhcp_interface: "enp0s8"   # ajusta al nombre real
+dhcpd_interface: "enp0s8"   # ajusta al nombre real
 ```
 
 ### Paso 8 — Verificar que Ansible llega al servidor
@@ -259,7 +259,7 @@ dhcp_interface: "enp0s8"   # ajusta al nombre real
 cd ~/lab-dns-dhcp/ansible-dhcp-dns
 
 # Ping de Ansible al servidor
-ansible dns_dhcp_servers -m ping
+ansible dns_dhcpd_servers -m ping
 
 # Salida esperada:
 # ns1.jmelol.lab | SUCCESS => { "ping": "pong" }
@@ -401,7 +401,7 @@ Vagrant reenvía los puertos de la VM (2222 para server, 2223 para client) a la 
 Para que Ansible (en Linux) conecte con las VMs, el archivo inventory/hosts.ini debe apuntar a la IP del adaptador vEthernet (WSL) en Windows, no al localhost:
 
 ```
-[dns_dhcp_servers]
+[dns_dhcpd_servers]
 ns1.jmelol.lab ansible_host=TU_IP_WINDOWS ansible_port=2222 ansible_user=vagrant ansible_ssh_private_key_file=../.vagrant/machines/server/virtualbox/private_key
 ```
 

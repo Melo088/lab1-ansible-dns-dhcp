@@ -4,7 +4,7 @@
 #  Instala y configura DNS (BIND) + DHCP (dhcpd) en Rocky Linux 9
 # ================================================================
 - name: "Configurar servidor DNS + DHCP"
-  hosts: dns_dhcp_servers
+  hosts: dns_dhcpd_servers
   gather_facts: true
 
   pre_tasks:

@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------
 - name: "DHCP | Instalar dhcp-server"
   ansible.builtin.dnf:
-    name: "{{ dhcp_package }}"
+    name: "{{ dhcpd_package }}"
     state: present
 
 # ---------------------------------------------------------------
@@ -22,37 +22,33 @@
 # ---------------------------------------------------------------
 - name: "DHCP | Crear directorio de drop-in systemd para dhcpd"
   ansible.builtin.file:
-    path:  "/etc/systemd/system/dhcpd.service.d"
+    path: "/etc/systemd/system/dhcpd.service.d"
     state: directory
     owner: root
     group: root
-    mode:  "0755"
+    mode: "0755"
 
 - name: "DHCP | Configurar interfaz de escucha (systemd drop-in)"
   ansible.builtin.template:
-    src:   dhcpd_override.conf.j2
-    dest:  "/etc/systemd/system/dhcpd.service.d/override.conf"
+    src: "dhcpd_override.conf.j2"
+    dest: "/etc/systemd/system/{{ dhcpd_service }}.service.d/override.conf"
     owner: root
     group: root
-    mode:  "0644"
-  notify: "restart dhcpd"
+    mode: "0644"
+  notify: "Reload systemd"
   register: dhcpd_override
 
-- name: "DHCP | Recargar systemd si cambió el drop-in"
-  ansible.builtin.systemd:
-    daemon_reload: true
-  when: dhcpd_override.changed
 
 # ---------------------------------------------------------------
 # 3. Generar dhcpd.conf con validación
 # ---------------------------------------------------------------
 - name: "DHCP | Desplegar dhcpd.conf"
   ansible.builtin.template:
-    src:   dhcpd.conf.j2
-    dest:  "{{ dhcp_conf_file }}"
+    src: dhcpd.conf.j2
+    dest: "{{ dhcpd_conf_file }}"
     owner: root
     group: root
-    mode:  "0644"
+    mode: "0644"
   notify: "restart dhcpd"
 
 # ---------------------------------------------------------------
@@ -60,18 +56,18 @@
 # ---------------------------------------------------------------
 - name: "DHCP | Validar dhcpd.conf con dhcpd -t"
   ansible.builtin.command:
-    cmd: "/usr/sbin/dhcpd -t -cf {{ dhcp_conf_file }}"
+    cmd: "/usr/sbin/dhcpd -t -cf {{ dhcpd_conf_file }}"
   register: dhcpd_test
   changed_when: false
-  failed_when:  dhcpd_test.rc != 0
+  failed_when: dhcpd_test.rc != 0
 
 # ---------------------------------------------------------------
 # 5. Habilitar y arrancar servicio
 # ---------------------------------------------------------------
 - name: "DHCP | Habilitar y arrancar dhcpd"
   ansible.builtin.service:
-    name:    "{{ dhcp_service }}"
-    state:   started
+    name: "{{ dhcpd_service }}"
+    state: started
     enabled: true
 
 # ---------------------------------------------------------------
@@ -82,9 +78,9 @@
 
 - name: "DHCP | Abrir puerto 67/udp en firewalld"
   ansible.posix.firewalld:
-    port:      "67/udp"
+    port: "67/udp"
     permanent: true
-    state:     enabled
+    state: enabled
     immediate: true
   when: "'firewalld.service' in ansible_facts.services and
          ansible_facts.services['firewalld.service'].state == 'running'"

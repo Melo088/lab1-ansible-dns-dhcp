@@ -3,7 +3,10 @@
 #  roles/dhcpd/handlers/main.yml
 # ================================================================
 
-- name: "restart dhcpd"
+- name: "Restart dhcpd"
   ansible.builtin.service:
-    name: "{{ dhcp_service }}"
+    name: "{{ dhcpd_service }}"
     state: restarted
+- name: "Reload systemd"
+  ansible.builtin.systemd:
+    daemon_reload: true

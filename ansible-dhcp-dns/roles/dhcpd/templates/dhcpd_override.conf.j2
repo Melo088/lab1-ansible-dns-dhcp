@@ -19,4 +19,4 @@
 [Service]
 # Limpiar ExecStart heredado antes de redefinir
 ExecStart=
-ExecStart=/usr/sbin/dhcpd -f -cf /etc/dhcp/dhcpd.conf -user dhcpd -group dhcpd --no-pid {{ dhcp_interface }}
+ExecStart=/usr/sbin/dhcpd -f -cf /etc/dhcp/dhcpd.conf -user dhcpd -group dhcpd --no-pid {{ dhcpd_interface }}

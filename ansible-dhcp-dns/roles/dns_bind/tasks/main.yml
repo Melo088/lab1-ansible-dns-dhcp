@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------
 - name: "DNS | Instalar paquetes BIND"
   ansible.builtin.dnf:
-    name: "{{ bind_packages }}"
+    name: "{{ dns_bind_packages }}"
     state: present
 
 # ---------------------------------------------------------------
@@ -21,45 +21,44 @@
 
 - name: "DNS | Permitir que named resuelva (SELinux boolean)"
   ansible.posix.seboolean:
-    name:       named_write_master_zones
-    state:      true
+    name: named_write_master_zones
+    state: true
     persistent: true
   ignore_errors: "{{ ansible_check_mode }}"
-  # Necesario cuando named escribe archivos de zona en /var/named
 
 # ---------------------------------------------------------------
 # 3. Generar named.conf
 # ---------------------------------------------------------------
 - name: "DNS | Desplegar named.conf"
   ansible.builtin.template:
-    src:   named.conf.j2
-    dest:  "{{ bind_conf_file }}"
+    src: named.conf.j2
+    dest: "{{ dns_bind_conf_file }}"
     owner: root
     group: named
-    mode:  "0640"
+    mode: "0640"
     validate: "/usr/sbin/named-checkconf %s"
-  notify: "restart named"
+  notify: "Restart named"
 
 # ---------------------------------------------------------------
 # 4. Generar archivos de zona
 # ---------------------------------------------------------------
-- name: "DNS | Desplegar zona forward ({{ dns_domain }})"
+- name: "DNS | Desplegar zona forward ({{ dns_bind_domain }})"
   ansible.builtin.template:
-    src:   zone.forward.j2
-    dest:  "{{ bind_zones_dir }}/{{ dns_domain }}.zone"
+    src: zone.forward.j2
+    dest: "{{ dns_bind_zones_dir }}/{{ dns_bind_domain }}.zone"
     owner: root
     group: named
-    mode:  "0640"
-  notify: "reload named"
+    mode: "0640"
+  notify: "Reload named"
 
-- name: "DNS | Desplegar zona reverse ({{ dns_reverse_zone_name }})"
+- name: "DNS | Desplegar zona reverse ({{ dns_bind_reverse_zone_name }})"
   ansible.builtin.template:
-    src:   zone.reverse.j2
-    dest:  "{{ bind_zones_dir }}/{{ dns_reverse_zone_name }}.zone"
+    src: zone.reverse.j2
+    dest: "{{ dns_bind_zones_dir }}/{{ dns_bind_reverse_zone_name }}.zone"
     owner: root
     group: named
-    mode:  "0640"
-  notify: "reload named"
+    mode: "0640"
+  notify: "Reload named"
 
 # ---------------------------------------------------------------
 # 5. Validaciones (named-checkzone)
@@ -68,29 +67,29 @@
   ansible.builtin.command:
     cmd: >
       /usr/sbin/named-checkzone
-      {{ dns_domain }}
-      {{ bind_zones_dir }}/{{ dns_domain }}.zone
-  register: checkzone_forward
+      {{ dns_bind_domain }}
+      {{ dns_bind_zones_dir }}/{{ dns_bind_domain }}.zone
+  register: dns_bind_checkzone_forward
   changed_when: false
-  failed_when:  checkzone_forward.rc != 0
+  failed_when: dns_bind_checkzone_forward.rc != 0
 
 - name: "DNS | Validar zona reverse con named-checkzone"
   ansible.builtin.command:
     cmd: >
       /usr/sbin/named-checkzone
-      {{ dns_reverse_zone_name }}
-      {{ bind_zones_dir }}/{{ dns_reverse_zone_name }}.zone
-  register: checkzone_reverse
+      {{ dns_bind_reverse_zone_name }}
+      {{ dns_bind_zones_dir }}/{{ dns_bind_reverse_zone_name }}.zone
+  register: dns_bind_checkzone_reverse
   changed_when: false
-  failed_when:  checkzone_reverse.rc != 0
+  failed_when: dns_bind_checkzone_reverse.rc != 0
 
 # ---------------------------------------------------------------
 # 6. Habilitar y arrancar servicio
 # ---------------------------------------------------------------
 - name: "DNS | Habilitar y arrancar named"
   ansible.builtin.service:
-    name:    "{{ bind_service }}"
-    state:   started
+    name: "{{ dns_bind_service }}"
+    state: started
     enabled: true
 
 # ---------------------------------------------------------------
@@ -101,35 +100,37 @@
 
 - name: "DNS | Abrir puerto 53/tcp en firewalld"
   ansible.posix.firewalld:
-    port:      "53/tcp"
+    port: "53/tcp"
     permanent: true
-    state:     enabled
+    state: enabled
     immediate: true
-  when: "'firewalld.service' in ansible_facts.services and
-         ansible_facts.services['firewalld.service'].state == 'running'"
+  when:
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state == 'running'"
 
 - name: "DNS | Abrir puerto 53/udp en firewalld"
   ansible.posix.firewalld:
-    port:      "53/udp"
+    port: "53/udp"
     permanent: true
-    state:     enabled
+    state: enabled
     immediate: true
-  when: "'firewalld.service' in ansible_facts.services and
-         ansible_facts.services['firewalld.service'].state == 'running'"
+  when:
+    - "'firewalld.service' in ansible_facts.services"
+    - "ansible_facts.services['firewalld.service'].state == 'running'"
 
 # ---------------------------------------------------------------
 # 8. Verificación final
 # ---------------------------------------------------------------
 - name: "DNS | Verificar que named responde (dig @localhost)"
   ansible.builtin.command:
-    cmd: "dig @127.0.0.1 {{ dns_server_hostname }}.{{ dns_domain }} +short"
-  register: dig_result
+    cmd: "dig @127.0.0.1 {{ dns_bind_server_hostname }}.{{ dns_bind_domain }} +short"
+  register: dns_bind_dig_result
   changed_when: false
-  failed_when:  dig_result.rc != 0
+  failed_when: dns_bind_dig_result.rc != 0
   retries: 3
-  delay:   5
-  until:   dig_result.rc == 0
+  delay: 5
+  until: dns_bind_dig_result.rc == 0
 
 - name: "DNS | Mostrar resultado de dig"
   ansible.builtin.debug:
-    msg: "Respuesta DNS para ns1.{{ dns_domain }}: {{ dig_result.stdout }}"
+    msg: "Respuesta DNS para ns1.{{ dns_bind_domain }}: {{ dns_bind_dig_result.stdout }}"

@@ -2,102 +2,66 @@
 # ================================================================
 #  group_vars/all.yml
 #  Variables globales del laboratorio jmelol.lab
-#  Sobrescriben los defaults/* de cada rol.
 # ================================================================
 
 # ---------------------------------------------------------------
-# Red del laboratorio
+# Red del laboratorio (Corregido espaciado)
 # ---------------------------------------------------------------
-lab_domain:      "jmelol.lab"
-lab_network:     "192.168.100.0"
-lab_netmask:     "255.255.255.0"
-lab_cidr:        "192.168.100.0/24"
-
-# Gateway: 192.168.100.1
-#   Convención de producción: primera IP utilizable de la subred
-#   reservada para el router/gateway. En este lab no hay router
-#   real, pero DHCP la anuncia igual (los clientes la necesitan
-#   para construir su tabla de rutas).
-lab_gateway:     "192.168.100.1"
-
-# IP del servidor DNS/DHCP: 192.168.100.10
-#   Convención: las 10 primeras IPs (.1-.10) se reservan para
-#   infraestructura (router, switches, servidores). El .10
-#   identifica claramente "primer servidor de infraestructura".
-lab_server_ip:   "192.168.100.10"
+lab_domain: "jmelol.lab"
+lab_network: "192.168.100.0"
+lab_netmask: "255.255.255.0"
+lab_cidr: "192.168.100.0/24"
+lab_gateway: "192.168.100.1"
+lab_server_ip: "192.168.100.10"
 
 # ---------------------------------------------------------------
-# BIND / DNS
+# BIND / DNS (Se mantienen como dns_ si el rol se llama dns_bind)
 # ---------------------------------------------------------------
-dns_domain:         "{{ lab_domain }}"
-dns_server_ip:      "{{ lab_server_ip }}"
+dns_domain: "{{ lab_domain }}"
+dns_server_ip: "{{ lab_server_ip }}"
 dns_server_hostname: "ns1"
-
-# Serial de zona — formato YYYYMMDDnn.
-# Incrementa nn (01→99) si haces más de un cambio en el mismo día.
 dns_zone_serial: "2025062401"
 
-dns_ttl:         86400    # 1 día
-dns_refresh:     3600     # 1 hora
-dns_retry:       900      # 15 min
-dns_expire:      604800   # 7 días
+dns_ttl: 86400
+dns_refresh: 3600
+dns_retry: 900
+dns_expire: 604800
 dns_minimum_ttl: 3600
 
-dns_allow_query:   "any"
-dns_recursion:     "yes"
-dns_listen_on:     "127.0.0.1; {{ lab_server_ip }}"
-dns_listen_on_v6:  "none"
+dns_allow_query: "any"
+dns_recursion: "yes"
+dns_listen_on: "127.0.0.1; {{ lab_server_ip }}"
+dns_listen_on_v6: "none"
 
 dns_forwarders:
   - "8.8.8.8"
   - "8.8.4.4"
 
-# Zona inversa (derivada de la red /24)
-dns_reverse_zone_name:   "100.168.192.in-addr.arpa"
+dns_reverse_zone_name: "100.168.192.in-addr.arpa"
 
-# Registros A + PTR del dominio
-# ptr = último octeto de la IP (para la zona reversa)
 dns_a_records:
   - { name: "ns1",    ip: "192.168.100.10", ptr: "10" }
   - { name: "gw",     ip: "192.168.100.1",  ptr: "1"  }
-  - { name: "client", ip: "192.168.100.100",ptr: "100" }  # ejemplo
+  - { name: "client", ip: "192.168.100.100", ptr: "100" }
 
 # ---------------------------------------------------------------
-# DHCP
+# DHCP (CAMBIO CRÍTICO: de dhcpd_ a dhcpd_ para cumplir con el rol)
 # ---------------------------------------------------------------
-dhcp_domain_name:         "{{ lab_domain }}"
-dhcp_domain_name_servers: ["{{ lab_server_ip }}"]
+dhcpd_domain_name: "{{ lab_domain }}"
+dhcpd_domain_name_servers: ["{{ lab_server_ip }}"]
 
-dhcp_default_lease_time: 3600    # 1 hora
-dhcp_max_lease_time:     86400   # 24 horas
+dhcpd_default_lease_time: 3600
+dhcpd_max_lease_time: 86400
 
-dhcp_subnets:
-  - network:      "{{ lab_network }}"
-    netmask:      "{{ lab_netmask }}"
-    range_start:  "192.168.100.100"
-    range_end:    "192.168.100.200"
-    routers:      "{{ lab_gateway }}"
-    broadcast:    "192.168.100.255"
+dhcpd_subnets:
+  - network: "{{ lab_network }}"
+    netmask: "{{ lab_netmask }}"
+    range_start: "192.168.100.100"
+    range_end: "192.168.100.200"
+    routers: "{{ lab_gateway }}"
+    broadcast: "192.168.100.255"
 
-# Rango dinámico: .100 – .200
-#   .1   → reservado gateway
-#   .2–.9 → reservado infraestructura futura
-#   .10  → servidor DNS/DHCP (IP estática)
-#   .50–.99 → reservado para servidores con IP fija (sin DHCP)
-#   .201–.254 → reservado para expansión futura
+dhcpd_reservations: []
 
-# Reservas opcionales (host fijo por MAC)
-dhcp_reservations: []
-# Ejemplo de reserva:
-# dhcp_reservations:
-#   - hostname: "client01"
-#     mac:      "08:00:27:ab:cd:ef"
-#     ip:       "192.168.100.50"
-
-# Interfaz de escucha DHCP
-# En Vagrant + VirtualBox con la box generic/rocky9:
-#   eth0 = interfaz NAT (Vagrant management)
-#   eth1 = private_network "lab-red" (la que sirve DHCP)
-# Ver README § "Interfaz DHCP" para verificar con:
-#   ip -br link show
-dhcp_interface: "eth1"
+# Interfaz de escucha DHCP corregida con prefijo
+dhcpd_interface: "eth1"
