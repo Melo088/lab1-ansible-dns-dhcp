@@ -1,0 +1,42 @@
+name: "Ansible Lint & Syntax Check"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint:
+    name: "Ansible Quality Gate"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout repo"
+        uses: actions/checkout@v4
+
+      - name: "Configurar Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: "Instalar dependencias"
+        run: |
+          pip install --upgrade pip
+          pip install ansible ansible-lint ansible-core
+
+      - name: "Instalar colecciones"
+        run: |
+          ansible-galaxy collection install ansible.posix community.general
+
+      - name: "Ejecutar ansible-lint"
+        run: |
+          # Ejecutamos desde la raíz del proyecto
+          ansible-lint ansible-dhcp-dns/site.yml
+
+      - name: "Syntax check del playbook"
+        run: |
+          ansible-playbook ansible-dhcp-dns/site.yml --syntax-check \
+            -i ansible-dhcp-dns/inventory/hosts.ini \
+            -e "ansible_host=127.0.0.1" \
+            --connection=local
