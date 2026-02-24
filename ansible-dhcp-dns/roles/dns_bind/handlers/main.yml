@@ -1,0 +1,14 @@
+---
+# ================================================================
+#  roles/dns_bind/handlers/main.yml
+# ================================================================
+
+- name: "restart named"
+  ansible.builtin.service:
+    name: "{{ bind_service }}"
+    state: restarted
+
+- name: "reload named"
+  ansible.builtin.service:
+    name: "{{ bind_service }}"
+    state: reloaded

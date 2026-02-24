@@ -1,0 +1,31 @@
+---
+# ================================================================
+#  site.yml — Playbook principal
+#  Instala y configura DNS (BIND) + DHCP (dhcpd) en Rocky Linux 9
+# ================================================================
+- name: "Configurar servidor DNS + DHCP"
+  hosts: dns_dhcp_servers
+  gather_facts: true
+
+  pre_tasks:
+    - name: "Verificar que el SO objetivo es Rocky Linux 9"
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['distribution'] == "Rocky"
+          - ansible_facts['distribution_major_version'] == "9"
+        fail_msg: >
+          Este playbook está diseñado para Rocky Linux 9.
+          SO detectado: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+        success_msg: "SO verificado: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }} ✓"
+
+    - name: "Actualizar cache de paquetes DNF"
+      ansible.builtin.dnf:
+        update_cache: true
+      changed_when: false
+
+  roles:
+    - role: dns_bind
+      tags: [dns, bind, named]
+
+    - role: dhcpd
+      tags: [dhcp, dhcpd]

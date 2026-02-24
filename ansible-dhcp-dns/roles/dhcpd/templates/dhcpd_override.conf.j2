@@ -1,0 +1,22 @@
+# ================================================================
+#  systemd drop-in: /etc/systemd/system/dhcpd.service.d/override.conf
+#  Generado por Ansible
+#
+#  Propósito: pasar la interfaz de escucha al binario dhcpd.
+#  En Rocky 9 / RHEL 9 el unit original de dhcp-server NO define
+#  la interfaz en ExecStart, por lo que dhcpd escucha en TODAS
+#  las interfaces — lo cual es incorrecto y puede causar conflictos
+#  con la interfaz NAT de Vagrant.
+#
+#  Método elegido: systemd drop-in (override.conf)
+#  Ventajas vs /etc/sysconfig/dhcpd (RHEL 7 legacy):
+#    ✓ Idiomático en sistemas systemd-nativos (RHEL 8/9)
+#    ✓ Compatible con NetworkManager y nombres de interfaz
+#      estables o predecibles
+#    ✓ Visible con: systemctl cat dhcpd
+# ================================================================
+
+[Service]
+# Limpiar ExecStart heredado antes de redefinir
+ExecStart=
+ExecStart=/usr/sbin/dhcpd -f -cf /etc/dhcp/dhcpd.conf -user dhcpd -group dhcpd --no-pid {{ dhcp_interface }}

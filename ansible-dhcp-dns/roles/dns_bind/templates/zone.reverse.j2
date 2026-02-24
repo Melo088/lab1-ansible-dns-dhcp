@@ -1,0 +1,26 @@
+; ================================================================
+;  Zona reverse: {{ dns_reverse_zone_name }}
+;  Generado por Ansible — NO editar manualmente
+; ================================================================
+
+$TTL {{ dns_ttl }}
+
+@   IN  SOA  {{ dns_server_hostname }}.{{ dns_domain }}. hostmaster.{{ dns_domain }}. (
+                {{ dns_zone_serial }}  ; Serial
+                {{ dns_refresh }}      ; Refresh
+                {{ dns_retry }}        ; Retry
+                {{ dns_expire }}       ; Expire
+                {{ dns_minimum_ttl }}  ; Minimum TTL
+            )
+
+; ---------------------------------------------------------------
+; Name servers
+; ---------------------------------------------------------------
+@           IN  NS   {{ dns_server_hostname }}.{{ dns_domain }}.
+
+; ---------------------------------------------------------------
+; Registros PTR (últimos octetos → FQDN)
+; ---------------------------------------------------------------
+{% for record in dns_a_records %}
+{{ "%-6s" | format(record.ptr) }}      IN  PTR  {{ record.name }}.{{ dns_domain }}.
+{% endfor %}

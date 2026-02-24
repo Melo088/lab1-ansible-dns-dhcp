@@ -1,0 +1,20 @@
+---
+# ================================================================
+#  roles/dhcpd/defaults/main.yml
+# ================================================================
+
+dhcp_package: "dhcp-server"
+dhcp_service: "dhcpd"
+dhcp_conf_file: "/etc/dhcp/dhcpd.conf"
+
+dhcp_domain_name:         "example.lab"
+dhcp_domain_name_servers: ["192.168.1.10"]
+
+dhcp_default_lease_time: 3600
+dhcp_max_lease_time:     86400
+
+# Interfaz de escucha (VER README § Interfaz DHCP)
+dhcp_interface: "eth1"
+
+dhcp_subnets:    []
+dhcp_reservations: []

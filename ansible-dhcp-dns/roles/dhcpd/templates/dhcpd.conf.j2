@@ -1,0 +1,45 @@
+# ================================================================
+#  dhcpd.conf — generado por Ansible
+#  Plantilla: roles/dhcpd/templates/dhcpd.conf.j2
+#  NO editar manualmente
+# ================================================================
+
+# Identificación del dominio
+option domain-name "{{ dhcp_domain_name }}";
+option domain-name-servers {{ dhcp_domain_name_servers | join(', ') }};
+
+# Tiempos de lease
+default-lease-time {{ dhcp_default_lease_time }};
+max-lease-time     {{ dhcp_max_lease_time }};
+
+# Este servidor es autoritativo para las redes declaradas
+authoritative;
+
+# Logging
+log-facility local7;
+
+# ---------------------------------------------------------------
+# Definición de subredes
+# ---------------------------------------------------------------
+{% for subnet in dhcp_subnets %}
+subnet {{ subnet.network }} netmask {{ subnet.netmask }} {
+    range {{ subnet.range_start }} {{ subnet.range_end }};
+    option routers          {{ subnet.routers }};
+    option broadcast-address {{ subnet.broadcast }};
+    option domain-name-servers {{ dhcp_domain_name_servers | join(', ') }};
+    option domain-name      "{{ dhcp_domain_name }}";
+}
+{% endfor %}
+
+{% if dhcp_reservations | length > 0 %}
+# ---------------------------------------------------------------
+# Reservas por MAC (host fijo)
+# ---------------------------------------------------------------
+{% for res in dhcp_reservations %}
+host {{ res.hostname }} {
+    hardware ethernet {{ res.mac }};
+    fixed-address     {{ res.ip }};
+    option host-name  "{{ res.hostname }}";
+}
+{% endfor %}
+{% endif %}

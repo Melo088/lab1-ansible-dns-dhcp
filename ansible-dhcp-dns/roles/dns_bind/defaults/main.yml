@@ -1,0 +1,39 @@
+---
+# ================================================================
+#  roles/dns_bind/defaults/main.yml
+#  Valores por defecto — sobreescribibles desde group_vars/all.yml
+# ================================================================
+
+bind_packages:
+  - bind
+  - bind-utils
+
+bind_service: "named"
+bind_conf_dir: "/etc/named"
+bind_zones_dir: "/var/named"
+bind_conf_file: "/etc/named.conf"
+
+# Zona forward
+dns_domain:          "example.lab"
+dns_server_ip:       "192.168.1.10"
+dns_server_hostname: "ns1"
+dns_zone_serial:     "2025062401"
+dns_ttl:             86400
+dns_refresh:         3600
+dns_retry:           900
+dns_expire:          604800
+dns_minimum_ttl:     3600
+
+# Opciones de named.conf
+dns_allow_query:  "any"
+dns_recursion:    "yes"
+dns_listen_on:    "127.0.0.1; {{ dns_server_ip }}"
+dns_listen_on_v6: "none"
+
+dns_forwarders: []
+
+# Zona inversa
+dns_reverse_zone_name: "1.168.192.in-addr.arpa"
+
+# Registros A (lista de dicts: name, ip, ptr)
+dns_a_records: []

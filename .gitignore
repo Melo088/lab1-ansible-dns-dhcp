@@ -1,0 +1,29 @@
+# Vagrant
+.vagrant/
+*.log
+
+# Ansible
+*.retry
+.ansible/
+/ansible.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (nunca versionar)
+*vault*
+*.vault
+secrets.yml

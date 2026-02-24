@@ -1,0 +1,26 @@
+; ================================================================
+;  Zona forward: {{ dns_domain }}
+;  Generado por Ansible — NO editar manualmente
+; ================================================================
+
+$TTL {{ dns_ttl }}
+
+@   IN  SOA  {{ dns_server_hostname }}.{{ dns_domain }}. hostmaster.{{ dns_domain }}. (
+                {{ dns_zone_serial }}  ; Serial   (YYYYMMDDnn — incrementar en cada cambio)
+                {{ dns_refresh }}      ; Refresh
+                {{ dns_retry }}        ; Retry
+                {{ dns_expire }}       ; Expire
+                {{ dns_minimum_ttl }}  ; Minimum TTL (negative cache)
+            )
+
+; ---------------------------------------------------------------
+; Name servers
+; ---------------------------------------------------------------
+@           IN  NS   {{ dns_server_hostname }}.{{ dns_domain }}.
+
+; ---------------------------------------------------------------
+; Registros A
+; ---------------------------------------------------------------
+{% for record in dns_a_records %}
+{{ "%-15s" | format(record.name) }}  IN  A    {{ record.ip }}
+{% endfor %}

@@ -1,0 +1,78 @@
+// ================================================================
+//  named.conf — generado por Ansible
+//  Plantilla: roles/dns_bind/templates/named.conf.j2
+//  NO editar manualmente — los cambios se perderán en el próximo
+//  ansible-playbook site.yml
+// ================================================================
+
+options {
+    listen-on port 53   { {{ dns_listen_on }}; };
+    listen-on-v6 port 53 { {{ dns_listen_on_v6 }}; };
+
+    directory       "/var/named";
+    dump-file       "/var/named/data/cache_dump.db";
+    statistics-file "/var/named/data/named_stats.txt";
+    memstatistics-file "/var/named/data/named_mem_stats.txt";
+    secroots-file   "/var/named/data/named.secroots";
+    recursing-file  "/var/named/data/named.recursing";
+
+    allow-query     { {{ dns_allow_query }}; };
+
+    recursion {{ dns_recursion }};
+
+{% if dns_forwarders | length > 0 %}
+    forwarders {
+{% for fw in dns_forwarders %}
+        {{ fw }};
+{% endfor %}
+    };
+    forward only;
+{% endif %}
+
+    dnssec-validation yes;
+
+    managed-keys-directory "/var/named/dynamic";
+    geoip-directory "/usr/share/GeoIP";
+
+    pid-file "/run/named/named.pid";
+    session-keyfile "/run/named/session.key";
+
+    /* BIND interfaces con el sistema crypto de RHEL */
+    include "/etc/crypto-policies/back-ends/bind.config";
+};
+
+logging {
+    channel default_debug {
+        file "data/named.run";
+        severity dynamic;
+    };
+};
+
+// ---------------------------------------------------------------
+// Zonas estándar (RFC 1912)
+// ---------------------------------------------------------------
+zone "." IN {
+    type hint;
+    file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+
+// ---------------------------------------------------------------
+// Zona forward: {{ dns_domain }}
+// ---------------------------------------------------------------
+zone "{{ dns_domain }}" IN {
+    type    master;
+    file    "{{ dns_domain }}.zone";
+    allow-update { none; };
+};
+
+// ---------------------------------------------------------------
+// Zona reverse: {{ dns_reverse_zone_name }}
+// ---------------------------------------------------------------
+zone "{{ dns_reverse_zone_name }}" IN {
+    type    master;
+    file    "{{ dns_reverse_zone_name }}.zone";
+    allow-update { none; };
+};
