@@ -1,4 +1,4 @@
-# ansible-dhcp-dns
+# Ansible Infra Core: Automated Network Provisioning
 
 Playbook de Ansible **idempotente** para instalar y configurar **DNS (BIND/named)** + **DHCP (dhcpd)** en Rocky Linux 9.
 
