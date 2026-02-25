@@ -49,7 +49,7 @@
     owner: root
     group: root
     mode: "0644"
-  notify: "restart dhcpd"
+  notify: "Restart dhcpd"
 
 # ---------------------------------------------------------------
 # 4. Validación de configuración (dhcpd -t)

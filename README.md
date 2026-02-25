@@ -410,6 +410,34 @@ ns1.jmelol.lab ansible_host=TU_IP_WINDOWS ansible_port=2222 ansible_user=vagrant
 El código de este repositorio utiliza la sintaxis moderna de Ansible `ansible_facts['variable']` en lugar de las variables inyectadas estáticamente (ej. `ansible_distribution`), garantizando compatibilidad futura y cero advertencias de depreciación (Deprecation Warnings) en la ejecución.
 
 
+### Consideraciones Críticas para Entornos WSL2
+
+Si ejecutas Ansible desde WSL2 hacia máquinas virtuales en VirtualBox 
+(Windows Host) debes configurar el inventario (`hosts.ini`) para saltar el alias de Vagrant:
+
+1. Usa la IP del adaptador vEthernet de Windows (ej. `172.28.224.1`), no `127.0.0.1`.
+2. Usa rutas absolutas de Linux para la llave privada (`/home/usuario/...`).
+3. Agrega argumentos de compatibilidad para OpenSSH 9.x: `-o PubkeyAcceptedKeyTypes=+ssh-rsa -o HostKeyAlgorithms=+ssh-rsa`.
+
+
+### `Connection aborted` o `Connection reset`
+
+Si Ansible no logra conectar y el puerto responde pero cierra la conexión inmediatamente, es probable que el servicio `sshd` esté crasheando en Rocky Linux 9 debido a un mismatch de OpenSSL.
+
+**Solución:**
+1. Entrar por consola gráfica de VirtualBox (`vagrant`/`vagrant`).
+2. Verificar el servicio: `sudo systemctl status sshd`.
+3. Si muestra un error de `OpenSSL version mismatch`, realizar un downgrade o reinstalación del paquete:
+   `sudo dnf downgrade openssl openssl-libs -y`
+   `sudo systemctl restart sshd`
+
+
+### `Permission denied (publickey)`
+
+Si las llaves generadas por Vagrant se corrompen o los permisos en WSL2 son muy abiertos:
+1. Asegura los permisos de la llave privada: `chmod 600 ruta/a/private_key`.
+2. Si la llave es rechazada, restaura las llaves oficiales inseguras de HashiCorp descargando `vagrant.pub` en el `.ssh/authorized_keys` del guest y `vagrant` como llave privada en el host.
+
 ---
 
 ## Licencia
